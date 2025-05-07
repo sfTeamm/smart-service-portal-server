@@ -120,4 +120,57 @@ module.exports = {
       });
     }
   },
+
+  getSentMessagesByLecture: async (req, res) => {
+    try {
+      const lectureId = req.params.lectureId;
+  
+      const messages = await Message.find({ 
+        'sender.id': lectureId, 
+        'sender.model': 'Lecture' 
+      })
+      .populate('sender.id', 'name email')
+      .populate('receiver.id', 'name email')
+      .sort({ createdAt: -1 });
+  
+      return res.status(200).json({
+        success: true,
+        message: "Messages sent by lecture retrieved successfully",
+        data: messages,
+      });
+    } catch (err) {
+      console.error("Error fetching sent messages for lecture:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error while fetching sent messages",
+      });
+    }
+  },  
+  getSentMessagesByStudent: async (req, res) => {
+    try {
+      const studentId = req.params.studentId;
+  
+      const messages = await Message.find({ 
+        'sender.id': studentId, 
+        'sender.model': 'Student' 
+      })
+      .populate('sender.id', 'name email')
+      .populate('receiver.id', 'name email')
+      .sort({ createdAt: -1 });
+  
+      return res.status(200).json({
+        success: true,
+        message: "Messages sent by student retrieved successfully",
+        data: messages,
+      });
+    } catch (err) {
+      console.error("Error fetching sent messages for student:", err);
+      return res.status(500).json({
+        success: false,
+        message: "Server error while fetching sent messages",
+      });
+    }
+  },  
+
+  
 };

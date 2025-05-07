@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { sendMessageToLecture, sendMessageToStudent, getMessagesForStudent, getMessagesForLecture } = require('../controllers/messageController');
+const { sendMessageToLecture, sendMessageToStudent, getMessagesForStudent, getMessagesForLecture,getSentMessagesByLecture, getSentMessagesByStudent } = require('../controllers/messageController');
 
 // Route to send a message from a student to a lecture
 router.post('/send-message-to-lecture', sendMessageToLecture);
@@ -14,5 +14,8 @@ router.get('/messages-for-student/:studentId', getMessagesForStudent);
 
 // Route to get messages for a specific lecture
 router.get('/messages-for-lecture/:lectureId', getMessagesForLecture);
+
+router.get('/sent-by-lecture/:lectureId', getSentMessagesByLecture);
+router.get('/sent-by-student/:studentId', getSentMessagesByStudent);
 
 module.exports = router;
