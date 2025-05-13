@@ -9,7 +9,6 @@ const {
 
 const router = express.Router();
 
-// Routes
 router.post('/create', createClass);
 router.get('/all', getAllClasses);
 router.patch('/update/:id', updateClassWithId);

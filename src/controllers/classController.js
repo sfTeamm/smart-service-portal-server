@@ -28,7 +28,7 @@ module.exports = {
     const classesWithCounts = await Class.aggregate([
       {
         $lookup: {
-          from: "students", // name of the collection
+          from: "students", 
           localField: "_id",
           foreignField: "class",
           as: "students"

@@ -197,7 +197,6 @@ module.exports = {
     const studentId = req.params.id;
     let { password, class: newClassId, ...updateData } = req.body;
 
-    // If trying to assign to a new class, check if class is full
     if (newClassId) {
       const studentCount = await Student.countDocuments({ class: newClassId });
 
@@ -208,10 +207,8 @@ module.exports = {
         });
       }
 
-      updateData.class = newClassId; // Only assign if not full
+      updateData.class = newClassId; 
     }
-
-    // Handle password update if provided
     if (password && password.trim()) {
       const salt = bcrypt.genSaltSync(10);
       updateData.password = bcrypt.hashSync(password.trim(), salt);
