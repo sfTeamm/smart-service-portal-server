@@ -1,29 +1,32 @@
 const Room = require("../models/Room");
 
 module.exports = {
-  createRoom: async (req, res) => {
-    try {
-      const { name, roomType, description } = req.body;
-  
-      if (!name || !roomType || !description) {
-        return res.status(400).json({ success: false, message: "All fields are required" });
-      }
-  
-      const newRoom = new Room({
-        name,
-        roomType,
-        description,
-        availability: true,
-      });
-  
-      await newRoom.save();
-      res.status(201).json({ success: true, message: "Room created", data: newRoom });
-    } catch (err) {
-      console.error("Error creating room:", err);
-      res.status(500).json({ success: false, message: "Server error" });
-    }
-  },
+createRoom: async (req, res) => {
+  try {
+    const { name, roomType, description } = req.body;
 
+    if (!name || !roomType || !description) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
+
+    const newRoom = new Room({
+      name,
+      roomType,
+      description,
+      availability: true,
+    });
+
+    await newRoom.save();
+    res.status(201).json({ success: true, message: "Room created", data: newRoom });
+  } catch (err) {
+    if (err.code === 11000 && err.keyPattern && err.keyPattern.name) {
+      return res.status(400).json({ success: false, message: "Room name already exists" });
+    }
+
+    console.error("Error creating room:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+},
   getAllRooms: async (req, res) => {
     try {
       const rooms = await Room.find().sort({ bookingDate: -1 });
