@@ -156,40 +156,94 @@ module.exports = {
     }
   },
 
+  // updateStudentWithId: async (req, res) => {
+  //   try {
+  //     const studentId = req.params.id;
+  //     let { password, ...updateData } = req.body;
+
+  //     if (password && password.trim()) {
+  //       const salt = bcrypt.genSaltSync(10);
+  //       updateData.password = bcrypt.hashSync(password.trim(), salt);
+  //     }
+
+  //     const updatedStudent = await Student.findByIdAndUpdate(
+  //       studentId,
+  //       { $set: updateData },
+  //       { new: true, runValidators: true }
+  //     ).select("-password");
+
+  //     if (!updatedStudent) {
+  //       return res
+  //         .status(404)
+  //         .json({ success: false, message: "Student not found" });
+  //     }
+
+  //     return res.status(200).json({
+  //       success: true,
+  //       message: "Student updated",
+  //       data: updatedStudent,
+  //     });
+  //   } catch (err) {
+  //     console.error("Update student error:", err);
+  //     return res
+  //       .status(500)
+  //       .json({ success: false, message: "Internal server error" });
+  //   }
+  // },
+
+
   updateStudentWithId: async (req, res) => {
-    try {
-      const studentId = req.params.id;
-      let { password, ...updateData } = req.body;
+  try {
+    const studentId = req.params.id;
+    let { password, class: newClassId, ...updateData } = req.body;
 
-      if (password && password.trim()) {
-        const salt = bcrypt.genSaltSync(10);
-        updateData.password = bcrypt.hashSync(password.trim(), salt);
+    // If trying to assign to a new class, check if class is full
+    if (newClassId) {
+      const studentCount = await Student.countDocuments({ class: newClassId });
+
+      if (studentCount >= 1) {
+        return res.status(400).json({
+          success: false,
+          message: "Cannot assign student. Class is already full (50 students).",
+        });
       }
 
-      const updatedStudent = await Student.findByIdAndUpdate(
-        studentId,
-        { $set: updateData },
-        { new: true, runValidators: true }
-      ).select("-password");
-
-      if (!updatedStudent) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Student not found" });
-      }
-
-      return res.status(200).json({
-        success: true,
-        message: "Student updated",
-        data: updatedStudent,
-      });
-    } catch (err) {
-      console.error("Update student error:", err);
-      return res
-        .status(500)
-        .json({ success: false, message: "Internal server error" });
+      updateData.class = newClassId; // Only assign if not full
     }
-  },
+
+    // Handle password update if provided
+    if (password && password.trim()) {
+      const salt = bcrypt.genSaltSync(10);
+      updateData.password = bcrypt.hashSync(password.trim(), salt);
+    }
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      studentId,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedStudent) {
+      return res.status(404).json({
+        success: false,
+        message: "Student not found",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Student updated",
+      data: updatedStudent,
+    });
+
+  } catch (err) {
+    console.error("Update student error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+},
 
   deleteStudentWithId: async (req, res) => {
     try {

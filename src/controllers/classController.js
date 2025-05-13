@@ -1,26 +1,68 @@
 const Class = require('../models/Class')
-const Lecture = require("../models/Student")
+const Student = require("../models/Student");
 const Schedule = require("../models/Schedule")
 
 module.exports = {
 
-    getAllClasses: async (req, res) => {
-        try {
-          const classes = await Class.find();
+    // getAllClasses: async (req, res) => {
+    //     try {
+    //       const classes = await Class.find();
       
-          res.status(200).json({
-            success: true,
-            message: "Successfully retrieved all classes.",
-            data: classes,
-          });
-        } catch (err) {
-          console.log("Getting all classes error:", err);
-          res.status(500).json({
-            success: false,
-            message: "Server error in getting all classes.",
-          });
+    //       res.status(200).json({
+    //         success: true,
+    //         message: "Successfully retrieved all classes.",
+    //         data: classes,
+    //       });
+    //     } catch (err) {
+    //       console.log("Getting all classes error:", err);
+    //       res.status(500).json({
+    //         success: false,
+    //         message: "Server error in getting all classes.",
+    //       });
+    //     }
+    //   },
+
+
+    getAllClasses: async (req, res) => {
+  try {
+    const classesWithCounts = await Class.aggregate([
+      {
+        $lookup: {
+          from: "students", // name of the collection
+          localField: "_id",
+          foreignField: "class",
+          as: "students"
         }
       },
+      {
+        $addFields: {
+          studentCount: { $size: "$students" }
+        }
+      },
+      {
+        $project: {
+          class_name: 1,
+          class_num: 1,
+          createdAt: 1,
+          studentCount: 1
+        }
+      }
+    ]);
+
+    res.status(200).json({
+      success: true,
+      message: "Successfully retrieved all classes with student count.",
+      data: classesWithCounts,
+    });
+  } catch (err) {
+    console.log("Getting all classes error:", err);
+    res.status(500).json({
+      success: false,
+      message: "Server error in getting all classes.",
+    });
+  }
+},
+
 
 
     createClass: async(req,res) =>{
@@ -84,7 +126,55 @@ module.exports = {
         message: "Server error while deleting class.",
       });
     }
-  }
+  },
+
+  getClassStudentCounts: async (req, res) => {
+    try {
+      const studentCounts = await Student.aggregate([
+        {
+          $match: { class: { $ne: null } }
+        },
+        {
+          $group: {
+            _id: "$class",
+            studentCount: { $sum: 1 }
+          }
+        },
+        {
+          $lookup: {
+            from: "classes",
+            localField: "_id",
+            foreignField: "_id",
+            as: "classDetails"
+          }
+        },
+        {
+          $unwind: "$classDetails"
+        },
+        {
+          $project: {
+            _id: 0,
+            classId: "$classDetails._id",
+            class_name: "$classDetails.class_name",
+            class_num: "$classDetails.class_num",
+            studentCount: 1
+          }
+        }
+      ]);
+
+      res.status(200).json({
+        success: true,
+        message: "Student count per class retrieved.",
+        data: studentCounts
+      });
+    } catch (err) {
+      console.error("Error getting student count per class:", err);
+      res.status(500).json({
+        success: false,
+        message: "Server error while getting student counts per class."
+      });
+    }
+  },
   
   
 
