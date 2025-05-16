@@ -200,7 +200,7 @@ module.exports = {
     if (newClassId) {
       const studentCount = await Student.countDocuments({ class: newClassId });
 
-      if (studentCount >= 1) {
+      if (studentCount >= 10) {
         return res.status(400).json({
           success: false,
           message: "Cannot assign student. Class is already full (50 students).",
